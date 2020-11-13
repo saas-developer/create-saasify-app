@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const envinfo = require('envinfo');
 const chalk = require('chalk');
+const semver = require('semver');
 
 let projectName;
 function init() {
@@ -34,6 +35,25 @@ function init() {
       }
     ).then(console.log)
   }
+
+  const isNodeVersionValid = verifyNodeVersion();
+  if (!isNodeVersionValid) {
+    return;
+  }
+}
+
+function verifyNodeVersion() {
+  console.log('process.version', process.version);
+
+  const isNodeVersionGreaterThan10 = semver.satisfies(process.version, '>=10');
+  console.log('isNodeVersionGreaterThan10', isNodeVersionGreaterThan10);
+  if (!isNodeVersionGreaterThan10) {
+    console.log(chalk.red(`You are using Node version ${process.version} which is unsupported`));
+    console.log(chalk.red(`Please upgrade to atleast version 10`));
+    return false;
+  }
+  return true;
+
 }
 
 // module.exports = {
