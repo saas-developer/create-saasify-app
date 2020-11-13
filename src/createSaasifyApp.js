@@ -1,5 +1,6 @@
 const { Command } = require('commander');
 const envinfo = require('envinfo');
+const chalk = require('chalk');
 
 let projectName;
 function init() {
@@ -20,7 +21,9 @@ function init() {
   program.parse(process.argv);
 
   if (program.info) {
-    console.log('Printing addtional environment information');
+    console.log(chalk.bold('Printing additional environment information'));
+    console.log(chalk.green(`\n Current version of program is ${program.version()}`))
+
     return envinfo.run(
       {
         System: ['OS', 'CPU'],
