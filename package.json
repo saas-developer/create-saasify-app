@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "commander": "^6.2.0"
+    "chalk": "^4.1.0",
+    "commander": "^6.2.0",
+    "envinfo": "^7.7.3"
   }
 }
