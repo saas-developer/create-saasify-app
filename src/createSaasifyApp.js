@@ -2,6 +2,9 @@ const { Command } = require('commander');
 const envinfo = require('envinfo');
 const chalk = require('chalk');
 const semver = require('semver');
+const path = require('path');
+const fs = require('fs-extra');
+const os = require('os');
 
 let projectName;
 function init() {
@@ -15,7 +18,6 @@ function init() {
   program
     .arguments('<project-directory>')
     .action(function (projectDirectory) {
-      console.log('projectDirectory', projectDirectory);
       projectName = projectDirectory;
     });
 
@@ -40,13 +42,13 @@ function init() {
   if (!isNodeVersionValid) {
     return;
   }
+
+  createSaasifyApp();
 }
 
 function verifyNodeVersion() {
-  console.log('process.version', process.version);
-
   const isNodeVersionGreaterThan10 = semver.satisfies(process.version, '>=10');
-  console.log('isNodeVersionGreaterThan10', isNodeVersionGreaterThan10);
+
   if (!isNodeVersionGreaterThan10) {
     console.log(chalk.red(`You are using Node version ${process.version} which is unsupported`));
     console.log(chalk.red(`Please upgrade to atleast version 10`));
@@ -54,6 +56,30 @@ function verifyNodeVersion() {
   }
   return true;
 
+}
+
+function createSaasifyApp() {
+  console.log('projectName is', projectName);
+
+  // Create project directory
+  const root = path.resolve(projectName);
+  console.log('root', root);
+
+  const appName = path.basename(root);
+  console.log('appName', appName);
+
+  fs.ensureDirSync(root);
+
+  const packageJson = {
+    name: appName,
+    version: '0.2.0',
+    private: true
+  };
+
+  fs.writeFileSync(
+    path.join(root, 'package.json'),
+    JSON.stringify(packageJson, null, 2) + os.EOL
+  )
 }
 
 // module.exports = {
