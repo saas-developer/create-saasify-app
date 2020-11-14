@@ -4,8 +4,6 @@ const chalk = require('chalk');
 const semver = require('semver');
 const path = require('path');
 const fs = require('fs-extra');
-const os = require('os');
-const spawn = require('cross-spawn');
 
 let projectName;
 function init() {
@@ -19,6 +17,7 @@ function init() {
   program
     .arguments('<project-directory>')
     .action(function (projectDirectory) {
+      console.log('projectDirectory', projectDirectory);
       projectName = projectDirectory;
     });
 
@@ -48,8 +47,10 @@ function init() {
 }
 
 function verifyNodeVersion() {
-  const isNodeVersionGreaterThan10 = semver.satisfies(process.version, '>=10');
+  console.log('process.version', process.version);
 
+  const isNodeVersionGreaterThan10 = semver.satisfies(process.version, '>=10');
+  console.log('isNodeVersionGreaterThan10', isNodeVersionGreaterThan10);
   if (!isNodeVersionGreaterThan10) {
     console.log(chalk.red(`You are using Node version ${process.version} which is unsupported`));
     console.log(chalk.red(`Please upgrade to atleast version 10`));
@@ -60,60 +61,14 @@ function verifyNodeVersion() {
 }
 
 function createSaasifyApp() {
-  console.log('projectName is', projectName);
-
   // Create project directory
   const root = path.resolve(projectName);
-  console.log('root', root);
-
-  const appName = path.basename(root);
-  console.log('appName', appName);
-
   fs.ensureDirSync(root);
 
-  const packageJson = {
-    name: appName,
-    version: '0.2.0',
-    private: true
-  };
+  
 
-  fs.writeFileSync(
-    path.join(root, 'package.json'),
-    JSON.stringify(packageJson, null, 2) + os.EOL
-  );
 
-  // current dir
-  const originalDirectory = process.cwd();
-  process.chdir(root);
-
-  // Install our template
-  const packageName = 'file:../saasify-template-bronze/saasify-template-bronze-1.0.0.tgz';
-  const packagePath = packageName.split('file:')[1];
-
-  const packageToInstall = `file:${path.resolve(originalDirectory, packagePath)}`;
-  console.log('packageToInstall', packageToInstall);
-
-  installPackage(root, packageToInstall)
 }
-
-function installPackage(cwd, package) {
-  return new Promise((resolve, reject) => {
-    let command = 'npm';
-    let args = ['install' ,'--save', '--save-exact', package];
-
-    console.log('args', args);
-
-    const child = spawn(command, args, { stdio: 'inherit' });
-    child.on('close', code => {
-      if (code != 0) {
-        reject();
-      } else {
-        resolve();
-      }
-    })
-
-  })
-};
 
 // module.exports = {
 //   init
