@@ -96,41 +96,48 @@ function createSaasifyApp() {
     console.log('An error occurred during template install');
   }
 
-  // Step 4: Copy all files from template into destination directory
-  const pathToTemplate = require.resolve('saasify-template-bronze/package.json', { paths: [root] });
-  console.log('pathToTemplate', pathToTemplate);
-
-  const saasifyTemplateBronzeDirName = path.dirname(pathToTemplate);
-  const saasifyTemplateBronzeTemplateDirName = path.join(saasifyTemplateBronzeDirName, 'template')
-  
-  if (fs.existsSync(saasifyTemplateBronzeTemplateDirName)) {
-    fs.copySync(saasifyTemplateBronzeTemplateDirName, root);
+  const saasifyScriptsPackageName = 'file:../saasify-scripts/saasify-scripts-1.0.0.tgz';
+  const saasifyScriptsPackagePath = saasifyScriptsPackageName.split('file:')[1];
+  const fullPathToSaasifyScripts = path.resolve(currentDirectory, saasifyScriptsPackagePath);
+  console.log('fullPathToSaasifyScripts', fullPathToSaasifyScripts);
+  const saasifyScriptsPackageToInstall = `file:${fullPathToSaasifyScripts}`;
+  const status2 = installPackage(saasifyScriptsPackageToInstall);
+  if (status2 != 0) {
+    // Error
+    console.log('An error occurred during saasify-scripts install');
   }
 
-  // Step 5: Merge template.json and package.json
+  // Call saasify-scripts/scripts/init.js to do the remaining steps
 
-  const templateDotJson = path.join(saasifyTemplateBronzeDirName, 'template.json');
-  const templateJson = require(templateDotJson);
-  console.log('templateJson', templateJson);
+  const source = `
+    var { init } = require('saasify-scripts/scripts/init.js');
+    init.apply(null, JSON.parse(process.argv[1]))
+  `;
 
-  const packageDotJson = path.join(root, 'package.json');
-  const packageJson2 = require(packageDotJson);
-  console.log('packageJson2', packageJson2);
-
-  packageJson2.scripts = Object.assign(packageJson2.scripts || {}, templateJson.scripts || {});
-  packageJson2.dependencies = Object.assign(packageJson2.dependencies || {}, templateJson.dependencies || {});
-
-  fs.writeFileSync(
-    path.join(root, 'package.json'),
-    JSON.stringify(packageJson2, null, 2) + os.EOL
+  executeNode({
+    cwd: process.cwd(),
+    args: []
+  },
+  [root, appName],
+  source
   )
-
-  // Step 6: Run npm install in "root", "client" and "server"
-  runNpmInstall(root);
-  runNpmInstall(path.join(root, "client"));
-  runNpmInstall(path.join(root, "server"));
+  return;
 
 
+  
+
+
+}
+
+function executeNode({ cwd, args }, data, source) {
+  console.log('process.execPath', process.execPath);
+  const proc = spawn.sync(
+    process.execPath,
+    [...args, '-e', source, '--', JSON.stringify(data)],
+    { cwd, stdio: 'inherit' }
+  );
+
+  return proc.status;
 }
 
 function runNpmInstall(directory) {
